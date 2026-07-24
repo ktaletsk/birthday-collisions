@@ -362,7 +362,7 @@ def takeaways(birthday_snapshot, participant_count):
     ## Takeaways 🎉
 
     - **23 people → > 50%**, **57 → > 99%** — collisions are cheap once you count *pairs*.
-    - The "paradox" is really just $\\binom{{n}}{{2}}$ growing fast.
+    - The "paradox" is really just **n(n − 1)/2 pairs** growing fast.
     - The same math powers **hash collisions**, **cryptography**, and **load balancing**.
 
     ### This room, live

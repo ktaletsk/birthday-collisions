@@ -261,14 +261,30 @@ body,
   letter-spacing: -0.02em;
 }
 
+.reveal .slides > section:last-of-type h3,
+.reveal .slides > section:last-of-type h4,
+.reveal .slides > section:last-of-type h5,
+.reveal .slides > section:last-of-type h6 {
+  color: #fffbeb !important;
+}
+
+.reveal .slides > section:last-of-type p,
 .reveal .slides > section:last-of-type li,
 .reveal .slides > section:last-of-type .paragraph {
   color: #e7e5e4 !important;
   font-weight: 500;
 }
 
-.reveal .slides > section:last-of-type strong,
-.reveal .slides > section:last-of-type marimo-tex {
+.reveal .slides > section:last-of-type em,
+.reveal .slides > section:last-of-type i {
+  color: #fafaf9 !important;
+}
+
+.reveal .slides > section:last-of-type li::marker {
+  color: #99f6e4;
+}
+
+.reveal .slides > section:last-of-type strong {
   color: #fde68a !important;
   font-weight: 800;
 }
