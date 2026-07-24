@@ -20,12 +20,42 @@ app = marimo.App(
 )
 
 with app.setup:
+    import calendar
+    import html
+    from datetime import date
+    from itertools import combinations
+
     import marimo as mo
     import numpy as np
     import pandas as pd
     import altair as alt
 
     from birthday_room import notebook_live
+
+    def birthday_label(birthday):
+        return f"{calendar.month_name[birthday['month']]} {birthday['day']}"
+
+    def birthday_people(birthday):
+        labels = list(birthday["names"])
+        anonymous = max(int(birthday["count"]) - len(labels), 0)
+        if anonymous == 1:
+            labels.append("a mystery guest")
+        elif anonymous > 1:
+            labels.append(f"{anonymous} mystery guests")
+        if len(labels) < 2:
+            return labels[0] if labels else "mystery guests"
+        if len(labels) == 2:
+            return f"{labels[0]} and {labels[1]}"
+        return f"{', '.join(labels[:-1])}, and {labels[-1]}"
+
+    def birthday_distance(pair):
+        first, second = pair
+        first_day = date(2000, first["month"], first["day"]).timetuple().tm_yday
+        second_day = date(
+            2000, second["month"], second["day"]
+        ).timetuple().tm_yday
+        direct = abs(first_day - second_day)
+        return min(direct, 366 - direct)
 
 
 @app.cell
@@ -353,6 +383,140 @@ def sim_chart_cell():
     )
 
     sim_chart
+    return
+
+
+@app.cell(hide_code=True)
+def room_results(birthday_snapshot, participant_count):
+    _birthdays = list(birthday_snapshot["birthdays"])
+    result_counts = {
+        (int(_item["month"]), int(_item["day"])): int(_item["count"])
+        for _item in _birthdays
+    }
+    result_matches = sorted(
+        (_item for _item in _birthdays if int(_item["count"]) > 1),
+        key=lambda _item: (
+            -int(_item["count"]),
+            int(_item["month"]),
+            int(_item["day"]),
+        ),
+    )
+    result_near_miss = min(
+        combinations(_birthdays, 2),
+        key=birthday_distance,
+        default=None,
+    )
+
+    _distinct = len(result_counts)
+    _possible_pairs = participant_count * (participant_count - 1) // 2
+    _matching_pairs = sum(
+        _count * (_count - 1) // 2 for _count in result_counts.values()
+    )
+    _birthday_word = "birthday" if participant_count == 1 else "birthdays"
+    _day_word = "day" if _distinct == 1 else "days"
+    mo.md(
+        f"""
+        ## The room, so far
+
+        # {participant_count} {_birthday_word} checked in
+
+        - **{_distinct}** distinct calendar {_day_word}
+        - **{_possible_pairs}** possible pairs
+        - **{_matching_pairs}** actual matching pairs
+        """
+    )
+    return result_counts, result_matches, result_near_miss
+
+
+@app.cell(hide_code=True)
+def exact_results(result_matches):
+    if result_matches:
+        _match_lines = "\n".join(
+            (
+                f"- **{html.escape(birthday_label(_match))}:** "
+                f"{html.escape(birthday_people(_match))} "
+                f'({_match["count"]} people)'
+            )
+            for _match in result_matches[:6]
+        )
+        _content = f"""
+        ## Exact matches
+
+        # The room has a birthday collision.
+
+        {_match_lines}
+        """
+    else:
+        _content = """
+        ## Exact matches
+
+        # No exact matches. Yet.
+
+        New votes will appear here automatically.
+        """
+    mo.md(_content)
+    return
+
+
+@app.cell(hide_code=True)
+def closest_results(result_near_miss):
+    if result_near_miss is not None:
+        _first, _second = result_near_miss
+        _distance = birthday_distance(result_near_miss)
+        _unit = "day" if _distance == 1 else "days"
+        _content = f"""
+        ## The closest near miss
+
+        # {html.escape(birthday_label(_first))}
+        ### {html.escape(birthday_people(_first))}
+
+        **{_distance} {_unit} apart**
+
+        # {html.escape(birthday_label(_second))}
+        ### {html.escape(birthday_people(_second))}
+        """
+    else:
+        _content = """
+        ## Near misses
+
+        # We need at least two distinct dates.
+
+        One birthday is a fact. Two birthdays are a dataset.
+        """
+    mo.md(_content)
+    return
+
+
+@app.cell(hide_code=True)
+def calendar_results(result_counts):
+    _months = []
+    for _month in range(1, 13):
+        _days = []
+        for _day in range(1, calendar.monthrange(2000, _month)[1] + 1):
+            _count = int(result_counts.get((_month, _day), 0))
+            _class_name = "match" if _count > 1 else "one" if _count == 1 else ""
+            _title = (
+                f"{calendar.month_name[_month]} {_day}: {_count}"
+                if _count
+                else f"{calendar.month_name[_month]} {_day}"
+            )
+            _days.append(
+                f'<span class="calendar-day {_class_name}" '
+                f'title="{html.escape(_title)}"></span>'
+            )
+        _months.append(
+            '<div class="calendar-month">'
+            f"<strong>{calendar.month_name[_month]}</strong>"
+            f'<div class="calendar-days">{"".join(_days)}</div>'
+            "</div>"
+        )
+    mo.vstack(
+        [
+            mo.md("## The room on a calendar"),
+            mo.Html(f'<div class="calendar-grid">{"".join(_months)}</div>'),
+        ],
+        gap=0,
+    )
     return
 
 

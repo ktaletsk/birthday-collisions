@@ -197,14 +197,18 @@ body,
 
 .calendar-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.8rem;
-  margin-top: 1rem;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.7rem 0.8rem;
+  margin-top: 0.6rem;
+}
+
+.reveal .slides section:has(.calendar-grid) .markdown h2 {
+  margin-left: 8rem;
 }
 
 .calendar-month strong {
   display: block;
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.25rem;
   color: #334155;
   font-size: 0.72rem;
 }
@@ -212,7 +216,7 @@ body,
 .calendar-days {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 3px;
+  gap: 2px;
 }
 
 .calendar-day {
@@ -266,6 +270,12 @@ body,
 .reveal .slides > section:last-of-type h5,
 .reveal .slides > section:last-of-type h6 {
   color: #fffbeb !important;
+}
+
+.reveal .slides > section:last-of-type .markdown h3,
+.reveal .slides > section:last-of-type .markdown p,
+.reveal .slides > section:last-of-type .markdown .paragraph {
+  margin-left: 3rem;
 }
 
 .reveal .slides > section:last-of-type p,
