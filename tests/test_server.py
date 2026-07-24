@@ -18,6 +18,8 @@ def test_join_page_is_served() -> None:
     assert "When is your birthday?" in response.text
     assert "Name or nickname" in response.text
     assert 'data-room="demo"' in response.text
+    assert 'href="/static/join.css"' in response.text
+    assert 'src="/static/join.js"' in response.text
 
 
 def test_two_people_can_create_an_exact_match() -> None:
