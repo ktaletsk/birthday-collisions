@@ -1,5 +1,7 @@
 # Birthday Collisions, Live
 
+[![Live demo on Railway](https://img.shields.io/badge/Live_demo-Railway-0B0D0E?logo=railway&logoColor=white)](https://birthday-collisions-production.up.railway.app/deck/)
+
 An audience-powered presentation.
 Fork of [Light2Dark/birthday-collisions](https://github.com/Light2Dark/birthday-collisions).
 
