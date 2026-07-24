@@ -5,6 +5,7 @@
 #     "marimo>=0.23.14",
 #     "numpy==2.5.1",
 #     "pandas==3.0.3",
+#     "segno>=1.6.6",
 # ]
 # ///
 
@@ -24,15 +25,42 @@ with app.setup:
     import pandas as pd
     import altair as alt
 
+    from birthday_room import notebook_live
+
+
+@app.cell
+def _():
+    join_url = notebook_live.join_url(mo.app_meta().request)
+    qr_data_uri = notebook_live.qr_data_uri(join_url)
+    refresh_results = mo.ui.refresh(
+        default_interval=notebook_live.REFRESH_INTERVAL,
+        label="Live results",
+    )
+    return join_url, qr_data_uri, refresh_results
+
 
 @app.cell(hide_code=True)
-def title():
-    mo.md(r"""
-    # 🎂 The Birthday Paradox
+def title(join_url, qr_data_uri, refresh_results):
+    refresh_results
+    birthday_snapshot = notebook_live.snapshot()
+    participant_count = int(birthday_snapshot["participant_count"])
+    mo.vstack(
+        [
+            mo.md(
+                f"""
+                # 🎂 The Birthday Paradox
 
-    ### How many people do you need in a room before **two of them share a birthday**?
-    """)
-    return
+                ### How many people do you need in a room before **two of them share a birthday**?
+
+                **Join the room:** [{join_url}]({join_url})
+                """
+            ),
+            mo.Html(notebook_live.corner_styles(qr_data_uri, participant_count)),
+            refresh_results,
+        ],
+        gap=0,
+    )
+    return birthday_snapshot, participant_count
 
 
 @app.cell(hide_code=True)
@@ -132,6 +160,12 @@ def birthday_prob(n: int) -> float:
     return 1.0 - p_no_match
 
 
+@app.function
+def near_miss_prob(n: int) -> float:
+    """Poisson approximation for birthdays exactly one day apart."""
+    return 1.0 - float(np.exp(-n * (n - 1) / 365))
+
+
 @app.cell
 def _():
     n_people = mo.ui.slider(
@@ -193,6 +227,84 @@ def curve(n_people):
     return
 
 
+@app.cell
+def near_miss_math():
+    mo.md(r"""
+    ## What about a near miss? 📅
+
+    Call two birthdays a near miss when they are **one calendar day apart**.
+    For any one pair:
+
+    $$P(\text{near miss}) = \frac{2}{365}$$
+
+    With $\binom{n}{2}$ pairs, the expected number of near misses is
+
+    $$\lambda = \binom{n}{2}\frac{2}{365} = \frac{n(n-1)}{365}$$
+
+    Treating these rare pair-events as approximately Poisson:
+
+    $$P(\text{at least one near miss}) \approx 1-e^{-\lambda}
+      = 1-e^{-n(n-1)/365}$$
+    """)
+    return
+
+
+@app.cell
+def near_miss_chart(birthday_snapshot):
+    _ns = np.arange(2, 61)
+    _comparison = pd.DataFrame(
+        {
+            "people": np.tile(_ns, 2),
+            "probability": [
+                *[birthday_prob(int(_n)) for _n in _ns],
+                *[near_miss_prob(int(_n)) for _n in _ns],
+            ],
+            "event": [
+                *(["Same birthday"] * len(_ns)),
+                *(["One day apart"] * len(_ns)),
+            ],
+        }
+    )
+    _chart = (
+        alt.Chart(_comparison)
+        .mark_line(strokeWidth=3)
+        .encode(
+            x=alt.X("people:Q", title="Number of people"),
+            y=alt.Y(
+                "probability:Q",
+                title="Probability",
+                axis=alt.Axis(format="%"),
+            ),
+            color=alt.Color(
+                "event:N",
+                title="",
+                scale=alt.Scale(
+                    domain=["Same birthday", "One day apart"],
+                    range=["#7c3aed", "#059669"],
+                ),
+            ),
+        )
+        .properties(width=640, height=280)
+    )
+    mo.vstack(
+        [
+            mo.md(
+                f"""
+                ## Near misses arrive sooner
+
+                **17 people → {near_miss_prob(17):.1%}** chance of a near miss.
+                By 23 people, it is already **{near_miss_prob(23):.1%}**.
+
+                **This room, live:** {notebook_live.near_miss_summary(birthday_snapshot)}
+                """
+            ),
+            _chart,
+        ],
+        gap=0,
+    )
+    return
+
+
 @app.function
 def simulate_birthday(n: int, trials: int = 5000, seed: int = 0) -> float:
     """Fraction of random rooms of n people that contain a shared birthday."""
@@ -245,13 +357,18 @@ def sim_chart_cell():
 
 
 @app.cell
-def takeaways():
-    mo.md(r"""
+def takeaways(birthday_snapshot, participant_count):
+    mo.md(f"""
     ## Takeaways 🎉
 
     - **23 people → > 50%**, **57 → > 99%** — collisions are cheap once you count *pairs*.
-    - The "paradox" is really just $\binom{n}{2}$ growing fast.
+    - The "paradox" is really just $\\binom{{n}}{{2}}$ growing fast.
     - The same math powers **hash collisions**, **cryptography**, and **load balancing**.
+
+    ### This room, live
+
+    **{notebook_live.attendance(participant_count)}.**
+    {notebook_live.collision_summary(birthday_snapshot)}
     """)
     return
 

@@ -1,0 +1,26 @@
+[project]
+name = "marimo-live-voting"
+version = "0.1.0"
+description = "A reactive marimo presentation driven by live audience input"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "altair==6.2.2",
+    "fastapi>=0.116",
+    "jinja2>=3.1",
+    "marimo>=0.23.14",
+    "numpy==2.5.1",
+    "pandas==3.0.3",
+    "segno>=1.6.6",
+    "uvicorn>=0.35",
+]
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28",
+    "pytest>=8.4",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

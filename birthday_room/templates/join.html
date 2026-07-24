@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#faf8f4" />
+    <title>Live Voting · {{ room_code }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/join.css') }}" />
+    <script defer src="{{ url_for('static', path='/join.js') }}"></script>
+  </head>
+  <body data-room="{{ room_code }}">
+    <main class="card" aria-labelledby="page-title">
+      <header class="hero">
+        <div class="eyebrow">
+          <span>Live room</span>
+          <strong>{{ room_code }}</strong>
+        </div>
+        <div class="cake" aria-hidden="true">🎂</div>
+        <h1 id="page-title">When is your birthday?</h1>
+        <p class="intro">
+          Month and day are enough. A nickname is optional—and may make a cameo
+          in the presentation.
+        </p>
+      </header>
+
+      <form id="birthday-form">
+        <label class="name-field">
+          <span>Name or nickname <small>optional</small></span>
+          <input
+            id="display-name"
+            name="display_name"
+            type="text"
+            maxlength="30"
+            autocomplete="off"
+            placeholder="Mystery guest"
+          />
+        </label>
+
+        <div class="fields">
+          <label>
+            <span>Month</span>
+            <select id="month" name="month" required>
+              <option value="">Choose month</option>
+              <option value="1">January</option>
+              <option value="2">February</option>
+              <option value="3">March</option>
+              <option value="4">April</option>
+              <option value="5">May</option>
+              <option value="6">June</option>
+              <option value="7">July</option>
+              <option value="8">August</option>
+              <option value="9">September</option>
+              <option value="10">October</option>
+              <option value="11">November</option>
+              <option value="12">December</option>
+            </select>
+          </label>
+
+          <label>
+            <span>Day</span>
+            <select id="day" name="day" required disabled>
+              <option value="">Choose day</option>
+            </select>
+          </label>
+        </div>
+
+        <button type="submit">Add my birthday</button>
+      </form>
+
+      <p id="status" class="status" role="status" aria-live="polite"></p>
+      <p class="privacy">
+        Your nickname may appear on screen. Answers live only in this temporary
+        room, and your browser gets a random ID so you can change yours.
+      </p>
+      <noscript>This tiny birthday machine needs JavaScript enabled.</noscript>
+    </main>
+  </body>
+</html>
